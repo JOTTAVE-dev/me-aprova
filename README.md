@@ -34,3 +34,5 @@ DATABASE_URL=postgresql://...
 ```
 
 Use a connection string do Supabase com `sslmode=require`.
+
+Na Vercel, adicione essa variável em Project Settings > Environment Variables e faça um redeploy.
