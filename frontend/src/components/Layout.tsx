@@ -1,35 +1,36 @@
-import { Award, BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, LogOut, Settings, Target, TrendingDown } from "lucide-react";
+import { BarChart3, BookOpen, CalendarCheck, Gauge, Layers, LogOut, Settings, Target } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 
 import { currentModuleConfig } from "../lib/modules";
 
-const nav = [
+const tjNav = [
   { to: "/", label: "Dashboard", icon: Gauge },
-  { to: "/hoje", label: "Estudo de Hoje", cyberLabel: "Plano de Hoje", icon: CalendarCheck },
-  { to: "/conteudos", label: "Conteúdos", cyberLabel: "Trilhas", icon: Layers },
-  { to: "/questoes", label: "Questões", cyberLabel: "Práticas", icon: ClipboardList },
-  { to: "/flashcards", label: "Flashcards", icon: Brain },
-  { to: "/simulados", label: "Simulados", cyberLabel: "Laboratórios", icon: Target },
+  { to: "/hoje", label: "Estudo de Hoje", icon: CalendarCheck },
+  { to: "/conteudos", label: "Conteúdos", icon: Layers },
+  { to: "/questoes", label: "Questões", icon: Target },
+  { to: "/flashcards", label: "Flashcards", icon: BookOpen },
+  { to: "/simulados", label: "Simulados", icon: Target },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
-  { to: "/pontos-fracos", label: "Pontos Fracos", icon: TrendingDown },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-const cyberNav = [{ to: "/certificacoes", label: "Certificações", icon: Award }];
-
-type NavItem = (typeof nav)[number] | (typeof cyberNav)[number];
+const cyberNav = [
+  { to: "/", label: "Dashboard", icon: Gauge },
+  { to: "/conteudos", label: "Roadmap", icon: Layers },
+  { to: "/hoje", label: "Estudar Hoje", icon: CalendarCheck },
+  { to: "/simulados", label: "Projetos", icon: Target },
+  { to: "/relatorios", label: "Progresso", icon: BarChart3 },
+  { to: "/configuracoes", label: "Configurações", icon: Settings },
+];
 
 export default function Layout() {
   const module = currentModuleConfig();
-  const visibleNav = [...nav, ...(module.id === "cyber" ? cyberNav : [])];
+  const isCyber = module.id === "cyber";
+  const visibleNav = isCyber ? cyberNav : tjNav;
 
   function changeModule() {
     window.localStorage.removeItem("me_aprova_active_module");
     window.location.href = "/login";
-  }
-
-  function labelFor(item: NavItem): string {
-    return module.id === "cyber" && "cyberLabel" in item && item.cyberLabel ? item.cyberLabel : item.label;
   }
 
   return (
@@ -44,6 +45,20 @@ export default function Layout() {
             <h1 className="text-lg font-semibold">{module.name}</h1>
           </div>
         </div>
+
+        {isCyber ? (
+          <div className="mb-5 rounded-lg border border-white/10 bg-white/[0.04] p-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Nível atual</p>
+            <div className="mt-2 flex items-center justify-between">
+              <span className="font-semibold">Blue Team Explorer</span>
+              <span className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-black">Lv. 3</span>
+            </div>
+            <div className="mt-3 h-2 rounded-full bg-white/10">
+              <div className="h-full w-[42%] rounded-full bg-accent" />
+            </div>
+          </div>
+        ) : null}
+
         <nav className="space-y-1">
           {visibleNav.map((item) => (
             <NavLink
@@ -56,15 +71,17 @@ export default function Layout() {
               }
             >
               <item.icon size={18} />
-              {labelFor(item)}
+              {item.label}
             </NavLink>
           ))}
         </nav>
+
         <button onClick={changeModule} className="mt-6 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/10 hover:text-zinc-100">
           <LogOut size={18} />
           Trocar módulo
         </button>
       </aside>
+
       <div className="xl:pl-72">
         <header className="sticky top-0 z-10 border-b border-white/10 bg-background/85 px-4 py-3 backdrop-blur xl:hidden">
           <div className="flex items-center justify-between">
@@ -72,9 +89,9 @@ export default function Layout() {
             <span className="text-xs text-zinc-400">{module.subtitle}</span>
           </div>
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {visibleNav.slice(0, 7).map((item) => (
+            {visibleNav.map((item) => (
               <NavLink key={item.to} to={item.to} className="rounded-md bg-white/5 px-3 py-2 text-xs text-zinc-300">
-                {labelFor(item)}
+                {item.label}
               </NavLink>
             ))}
           </nav>
