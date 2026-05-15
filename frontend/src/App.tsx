@@ -11,6 +11,7 @@ import Simulados from "./pages/Simulados";
 import Placeholder from "./pages/Placeholder";
 import Login from "./pages/Login";
 import SetupRequired from "./pages/SetupRequired";
+import Certificacoes from "./pages/Certificacoes";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { getCurrentModule } from "./lib/modules";
 
@@ -55,6 +56,7 @@ export default function App() {
         <Route path="/simulados" element={<Simulados />} />
         <Route path="/relatorios" element={<Placeholder title="Relatórios" />} />
         <Route path="/pontos-fracos" element={<Placeholder title="Pontos Fracos" />} />
+        <Route path="/certificacoes" element={<Certificacoes />} />
         <Route path="/configuracoes" element={<Placeholder title="Configurações" />} />
       </Route>
     </Routes>

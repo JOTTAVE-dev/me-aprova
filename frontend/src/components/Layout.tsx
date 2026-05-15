@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, LogOut, Settings, Target, TrendingDown } from "lucide-react";
+import { Award, BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, LogOut, Settings, Target, TrendingDown } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import { currentModuleConfig } from "../lib/modules";
 
@@ -14,8 +14,13 @@ const nav = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+const cyberNav = [
+  { to: "/certificacoes", label: "Certificações", icon: Award },
+];
+
 export default function Layout() {
   const module = currentModuleConfig();
+  const visibleNav = [...nav, ...(module.id === "cyber" ? cyberNav : [])];
 
   function changeModule() {
     window.localStorage.removeItem("me_aprova_active_module");
@@ -35,7 +40,7 @@ export default function Layout() {
           </div>
         </div>
         <nav className="space-y-1">
-          {nav.map((item) => (
+          {visibleNav.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -62,7 +67,7 @@ export default function Layout() {
             <span className="text-xs text-zinc-400">{module.subtitle}</span>
           </div>
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {nav.slice(0, 6).map((item) => (
+            {visibleNav.slice(0, 7).map((item) => (
               <NavLink key={item.to} to={item.to} className="rounded-md bg-white/5 px-3 py-2 text-xs text-zinc-300">
                 {item.label}
               </NavLink>
