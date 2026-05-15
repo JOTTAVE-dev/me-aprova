@@ -46,7 +46,49 @@ export function seedTopics() {
   return Object.entries(topicGroups).flatMap(([category, names]) =>
     names.map((name) => {
       const priority = priorityFor(category, name);
-      return { name, category, priority, weight: priority, status: "pending" };
+      return { name, category, priority, weight: priority, status: "pending", module: "tj" };
+    }),
+  );
+}
+
+export const cyberTopicGroups: Record<string, string[]> = {
+  "Fase 1 — Fundamentos de TI e Segurança": [
+    "Como a internet funciona", "IPv4", "IPv6", "DNS", "DHCP", "NAT", "Gateway", "MAC Address", "TCP/IP", "Modelo OSI", "Switch", "Roteador", "ping", "tracert", "ipconfig", "nslookup", "Cisco Packet Tracer", "Wireshark", "Projeto: rede simples no Packet Tracer", "Estrutura Linux", "Terminal Linux", "Diretórios Linux", "Usuários Linux", "Permissões Linux", "SSH", "Processos Linux", "Serviços Linux", "Logs Linux", "Comandos Linux essenciais", "Ubuntu VM", "Projeto: mini servidor Linux local", "CIA Triad", "Vulnerabilidade", "Exploit", "Malware", "Phishing", "Ransomware", "Engenharia social", "SIEM", "SOC", "Blue Team", "Red Team", "NIST", "ISO 27001", "OWASP Top 10", "Projeto: documentação dos principais ataques",
+  ],
+  "Fase 2 — Redes e Monitoramento": [
+    "TCP", "UDP", "HTTP/HTTPS", "FTP", "SMTP", "Protocolos DNS", "Portas comuns", "Nmap", "Projeto: escaneamento da própria rede", "Captura de pacotes", "Handshake TCP", "DNS requests", "HTTP requests", "TLS", "Projeto: analisar tráfego do navegador", "Projeto: analisar login em sites", "Logs Windows", "Syslog", "Wazuh", "Splunk Free", "ELK Stack", "Projeto: instalar Wazuh localmente", "Firewall", "UFW", "Windows Defender", "MFA", "Hardening Linux", "Hardening Windows", "Projeto: hardening completo da VM Ubuntu",
+  ],
+  "Fase 3 — Blue Team": [
+    "SOC Analyst", "Alertas", "Incidentes", "IOC", "Threat hunting", "MITRE ATT&CK", "Projeto: simulação de incidentes", "Sigma Rules", "VirusTotal", "AbuseIPDB", "Projeto: mini investigação de ameaças", "Active Directory", "Domínio AD", "GPO", "LDAP", "Kerberos", "Projeto: instalar AD em VM", "Resposta a Incidentes", "Contenção", "Erradicação", "Recuperação", "Projeto: simular ransomware",
+  ],
+  "Fase 4 — Cloud Básico": [
+    "AWS IAM", "EC2", "S3", "VPC", "Security Groups", "AWS Cloud Practitioner", "Projeto: infraestrutura simples na AWS", "IAM Policies", "Least Privilege", "MFA em cloud", "CloudTrail", "GuardDuty", "Projeto: monitoramento AWS", "Containers", "Dockerfile", "Imagens Docker", "Volumes Docker", "Projeto: containerizar aplicação Python", "Pods", "Services Kubernetes", "Deployments Kubernetes", "Projeto: aplicação simples no Kubernetes",
+  ],
+  "Fase 5 — DevSecOps e AppSec": [
+    "CI/CD", "Segurança de pipeline", "GitHub Actions", "Secrets management", "Projeto: pipeline com análise de segurança", "AppSec", "SQL Injection", "XSS", "CSRF", "Burp Suite", "OWASP ZAP", "Projeto: testar vulnerabilidades em aplicação local", "JWT", "OAuth", "Rate limiting", "API Gateway", "Projeto: segurança API FastAPI", "Reconhecimento", "Enumeração", "Exploração básica", "TryHackMe", "Hack The Box",
+  ],
+  "Portfólio e Certificações": [
+    "Dashboard de Monitoramento", "Python para segurança", "FastAPI para logs", "Wazuh para portfólio", "Scanner de rede com Nmap", "Relatórios de segurança", "Sistema de Logs com ELK", "Laboratório Blue Team", "Ubuntu Lab", "Windows Server Lab", "Active Directory Lab", "Google Cybersecurity Certificate", "Cisco CyberOps", "Security+", "SC-900", "AZ-900", "LetsDefend", "BlueTeamLabs", "Security Automation", "Detection Engineering", "AI Security",
+  ],
+};
+
+const cyberRules: Array<[number, string[]]> = [
+  [5, ["TCP/IP", "Modelo OSI", "DNS", "Linux", "Logs", "SIEM", "SOC", "Wazuh", "Nmap", "Wireshark", "MITRE", "IOC", "Active Directory", "IAM", "CloudTrail", "GuardDuty", "OWASP", "DevSecOps"]],
+  [4, ["IPv4", "IPv6", "SSH", "Malware", "Phishing", "Ransomware", "Syslog", "Hardening", "Firewall", "Sigma", "VirusTotal", "AWS", "Docker", "Kubernetes", "GitHub Actions", "Burp", "ZAP"]],
+  [3, ["Packet Tracer", "Windows", "Splunk", "ELK", "Kerberos", "GPO", "VPC", "S3", "EC2", "JWT", "OAuth", "TryHackMe", "Hack The Box"]],
+  [2, ["Certificat", "AZ-900", "SC-900", "Cloud Practitioner", "LetsDefend", "BlueTeamLabs"]],
+];
+
+function cyberPriorityFor(category: string, name: string) {
+  const text = `${category} ${name}`.toLowerCase();
+  return cyberRules.find(([, terms]) => terms.some((term) => text.includes(term.toLowerCase())))?.[0] ?? 3;
+}
+
+export function seedCyberTopics() {
+  return Object.entries(cyberTopicGroups).flatMap(([category, names]) =>
+    names.map((name) => {
+      const priority = cyberPriorityFor(category, name);
+      return { name, category, priority, weight: priority, status: "pending", module: "cyber" };
     }),
   );
 }

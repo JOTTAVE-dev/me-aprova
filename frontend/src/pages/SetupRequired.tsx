@@ -18,7 +18,7 @@ export default function SetupRequired({ kind, detail }: SetupRequiredProps) {
             {isChecking ? <RotateCw size={20} /> : <AlertTriangle size={20} />}
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-accent">Me Aprova no TJ</p>
+            <p className="text-sm uppercase tracking-[0.28em] text-accent">Me Aprova</p>
             <h1 className="mt-2 text-2xl font-semibold">
               {isChecking ? "Verificando Supabase" : "Configuração necessária"}
             </h1>

@@ -1,5 +1,6 @@
-import { BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, Settings, Target, TrendingDown } from "lucide-react";
+import { BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, LogOut, Settings, Target, TrendingDown } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
+import { currentModuleConfig } from "../lib/modules";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: Gauge },
@@ -14,6 +15,13 @@ const nav = [
 ];
 
 export default function Layout() {
+  const module = currentModuleConfig();
+
+  function changeModule() {
+    window.localStorage.removeItem("me_aprova_active_module");
+    window.location.href = "/login";
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-white/10 bg-black/35 px-4 py-5 backdrop-blur xl:block">
@@ -22,8 +30,8 @@ export default function Layout() {
             <BookOpen size={20} />
           </div>
           <div>
-            <p className="text-sm text-zinc-400">planner inteligente</p>
-            <h1 className="text-lg font-semibold">Me Aprova no TJ</h1>
+            <p className="text-sm text-zinc-400">{module.subtitle}</p>
+            <h1 className="text-lg font-semibold">{module.name}</h1>
           </div>
         </div>
         <nav className="space-y-1">
@@ -42,12 +50,16 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+        <button onClick={changeModule} className="mt-6 flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-zinc-400 transition hover:bg-white/10 hover:text-zinc-100">
+          <LogOut size={18} />
+          Trocar módulo
+        </button>
       </aside>
       <div className="xl:pl-72">
         <header className="sticky top-0 z-10 border-b border-white/10 bg-background/85 px-4 py-3 backdrop-blur xl:hidden">
           <div className="flex items-center justify-between">
-            <strong>Me Aprova no TJ</strong>
-            <span className="text-xs text-zinc-400">TJ • Analista TI</span>
+            <strong>{module.name}</strong>
+            <span className="text-xs text-zinc-400">{module.subtitle}</span>
           </div>
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {nav.slice(0, 6).map((item) => (

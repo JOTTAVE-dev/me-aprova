@@ -1,6 +1,6 @@
-# Me Aprova no TJ
+# Me Aprova
 
-MVP de planner inteligente para estudos de concursos FCC, feito para rodar na Vercel usando Supabase desde o inicio.
+MVP de planner inteligente com módulos para TJ/Concurso e Jornada de Cibersegurança, feito para rodar na Vercel usando Supabase desde o inicio.
 
 ## Stack atual
 
@@ -24,6 +24,8 @@ supabase/schema.sql
 ```
 
 Esse script cria as tabelas, indices e politicas RLS publicas para o MVP.
+
+Se voce ja rodou uma versao antiga do SQL, rode o arquivo novamente. Ele adiciona a coluna `module`, usada para separar o progresso do TJ e da Ciberseguranca.
 
 ## Variaveis na Vercel
 

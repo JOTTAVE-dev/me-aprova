@@ -12,8 +12,10 @@ import Placeholder from "./pages/Placeholder";
 import Login from "./pages/Login";
 import SetupRequired from "./pages/SetupRequired";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
+import { getCurrentModule } from "./lib/modules";
 
 export default function App() {
+  const selectedModule = getCurrentModule();
   const [setup, setSetup] = useState<"checking" | "ready" | "env" | "schema">("checking");
   const [detail, setDetail] = useState<string>();
 
@@ -25,7 +27,7 @@ export default function App() {
 
     supabase
       .from("topics")
-      .select("id", { count: "exact", head: true })
+      .select("id,module", { count: "exact", head: true })
       .then(({ error }) => {
         if (error) {
           setDetail(error.message);
@@ -36,6 +38,7 @@ export default function App() {
       });
   }, []);
 
+  if (!selectedModule) return <Login />;
   if (setup === "checking") return <SetupRequired kind="checking" />;
   if (setup === "env") return <SetupRequired kind="env" />;
   if (setup === "schema") return <SetupRequired kind="schema" detail={detail} />;

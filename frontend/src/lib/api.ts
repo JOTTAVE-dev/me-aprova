@@ -1,5 +1,6 @@
+import { currentModuleConfig, getCurrentModule } from "./modules";
+import { seedCyberTopics, seedTopics } from "./seedData";
 import { getSupabase } from "./supabase";
-import { seedTopics } from "./seedData";
 
 export type Topic = {
   id: number;
@@ -13,6 +14,7 @@ export type Topic = {
   errors: number;
   last_studied_at: string | null;
   next_review_at: string | null;
+  module: string;
 };
 
 export type Flashcard = {
@@ -23,6 +25,7 @@ export type Flashcard = {
   topic_id: number;
   next_review_at: string;
   review_stage: number;
+  module?: string;
   topic?: Topic;
 };
 
@@ -58,6 +61,7 @@ export type QuestionLog = {
   correct: number;
   wrong: number;
   logged_at: string;
+  module?: string;
 };
 
 export type Simulation = {
@@ -67,11 +71,16 @@ export type Simulation = {
   correct: number;
   score: number;
   notes: string;
+  module?: string;
 };
 
 type ApiResponse<T> = Promise<{ data: T }>;
 
 const examDate = new Date("2026-08-09T00:00:00");
+
+function activeModule() {
+  return getCurrentModule() ?? "tj";
+}
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -84,6 +93,7 @@ function addDays(days: number) {
 }
 
 function daysRemaining() {
+  if (activeModule() === "cyber") return 270;
   const now = new Date();
   return Math.max(Math.ceil((examDate.getTime() - now.getTime()) / 86_400_000), 0);
 }
@@ -96,18 +106,23 @@ function nextSunday() {
 
 async function ensureSeeded() {
   const supabase = getSupabase();
-  const { count, error } = await supabase.from("topics").select("*", { count: "exact", head: true });
+  const module = activeModule();
+  const { count, error } = await supabase.from("topics").select("*", { count: "exact", head: true }).eq("module", module);
   if (error) throw error;
   if ((count ?? 0) > 0) return;
 
-  const { data: topics, error: insertError } = await supabase.from("topics").insert(seedTopics()).select("id,name,priority");
+  const initialTopics = module === "cyber" ? seedCyberTopics() : seedTopics();
+  const { data: topics, error: insertError } = await supabase.from("topics").insert(initialTopics).select("id,name,priority,module");
   if (insertError) throw insertError;
 
   const cards = (topics ?? []).slice(0, 24).map((topic) => ({
-    question: `O que a FCC costuma cobrar em ${topic.name}?`,
-    answer: `Revise conceito, aplicação prática, diferenças e pegadinhas recorrentes sobre ${topic.name}.`,
+    question: module === "cyber" ? `Como eu aplico ${topic.name} na prática?` : `O que a FCC costuma cobrar em ${topic.name}?`,
+    answer: module === "cyber"
+      ? `Revise conceito, ferramenta, comando ou laboratório relacionado a ${topic.name}.`
+      : `Revise conceito, aplicação prática, diferenças e pegadinhas recorrentes sobre ${topic.name}.`,
     difficulty: Math.max(2, 6 - Number(topic.priority)),
     topic_id: topic.id,
+    module,
     next_review_at: addDays(1),
   }));
   if (cards.length) {
@@ -119,7 +134,13 @@ async function ensureSeeded() {
 async function listTopics(category?: string) {
   const supabase = getSupabase();
   await ensureSeeded();
-  let query = supabase.from("topics").select("*").order("category").order("priority", { ascending: false }).order("name");
+  let query = supabase
+    .from("topics")
+    .select("*")
+    .eq("module", activeModule())
+    .order("category")
+    .order("priority", { ascending: false })
+    .order("name");
   if (category) query = query.eq("category", category);
   const { data, error } = await query;
   if (error) throw error;
@@ -129,7 +150,7 @@ async function listTopics(category?: string) {
 async function getDashboard(): ApiResponse<Dashboard> {
   const supabase = getSupabase();
   const topics = await listTopics();
-  const { data: logs, error } = await supabase.from("question_logs").select("*");
+  const { data: logs, error } = await supabase.from("question_logs").select("*").eq("module", activeModule());
   if (error) throw error;
 
   const studied = topics.filter((topic) => topic.questions_done > 0);
@@ -154,11 +175,13 @@ async function getDashboard(): ApiResponse<Dashboard> {
 
 async function getTodayStudy(): ApiResponse<TodayStudy> {
   const supabase = getSupabase();
+  const module = activeModule();
   const topics = await listTopics();
   const today = todayIso();
   const { data: cards, error } = await supabase
     .from("flashcards")
     .select("*, topic:topics(*)")
+    .eq("module", module)
     .lte("next_review_at", today)
     .order("next_review_at")
     .limit(10);
@@ -172,7 +195,8 @@ async function getTodayStudy(): ApiResponse<TodayStudy> {
     .sort((a, b) => b.priority - a.priority || a.accuracy - b.accuracy || a.questions_done - b.questions_done)[0] ?? null;
   const secondaryTopic = topics.filter((topic) => topic.id !== mainTopic?.id).sort((a, b) => b.priority - a.priority || a.questions_done - b.questions_done)[0] ?? null;
   const isSunday = new Date().getDay() === 0;
-  const target = isSunday ? 70 : 25 + (mainTopic && mainTopic.priority >= 5 ? 10 : 0) + (mainTopic && mainTopic.accuracy < 60 ? 10 : 0);
+  const config = currentModuleConfig();
+  const target = module === "cyber" ? 1 : isSunday ? 70 : 25 + (mainTopic && mainTopic.priority >= 5 ? 10 : 0) + (mainTopic && mainTopic.accuracy < 60 ? 10 : 0);
 
   return {
     data: {
@@ -184,9 +208,11 @@ async function getTodayStudy(): ApiResponse<TodayStudy> {
       review_topic: reviewTopic,
       questions_target: target,
       flashcards_due: (cards ?? []) as Flashcard[],
-      checklist: isSunday
-        ? ["Gerar simulado FCC com temas de maior prioridade", "Corrigir questões e registrar percentual por tema", "Transformar erros em flashcards", "Replanejar pontos fracos da semana"]
-        : ["Bloco 1: 60 min de teoria principal", "Bloco 2: 60 min de revisão ou teoria secundária", "Bloco 3: questões FCC e revisão de erros", "Registrar desempenho ao terminar"],
+      checklist: module === "cyber"
+        ? ["40 min de teoria guiada", "60 min de laboratório prático", "30 min de projeto ou portfólio", "20 min de anotações e flashcards"]
+        : isSunday
+          ? ["Gerar simulado FCC com temas de maior prioridade", "Corrigir questões e registrar percentual por tema", "Transformar erros em flashcards", "Replanejar pontos fracos da semana"]
+          : ["Bloco 1: 60 min de teoria principal", "Bloco 2: 60 min de revisão ou teoria secundária", `Bloco 3: ${config.questionLabel.toLowerCase()} e revisão de erros`, "Registrar desempenho ao terminar"],
     },
   };
 }
@@ -194,7 +220,7 @@ async function getTodayStudy(): ApiResponse<TodayStudy> {
 async function listFlashcards(dueOnly = false): ApiResponse<Flashcard[]> {
   const supabase = getSupabase();
   await ensureSeeded();
-  let query = supabase.from("flashcards").select("*, topic:topics(*)").order("next_review_at");
+  let query = supabase.from("flashcards").select("*, topic:topics(*)").eq("module", activeModule()).order("next_review_at");
   if (dueOnly) query = query.lte("next_review_at", todayIso());
   const { data, error } = await query;
   if (error) throw error;
@@ -203,13 +229,14 @@ async function listFlashcards(dueOnly = false): ApiResponse<Flashcard[]> {
 
 async function createQuestionLog(payload: Partial<QuestionLog> & { topic_id: number; quantity: number; correct: number; bank?: string }) {
   const supabase = getSupabase();
+  const module = activeModule();
   const wrong = Math.max(payload.quantity - payload.correct, 0);
   const { data: topic, error: topicError } = await supabase.from("topics").select("*").eq("id", payload.topic_id).single();
   if (topicError) throw topicError;
 
   const { data, error } = await supabase
     .from("question_logs")
-    .insert({ bank: payload.bank ?? "FCC", topic_id: payload.topic_id, quantity: payload.quantity, correct: payload.correct, wrong })
+    .insert({ bank: payload.bank ?? currentModuleConfig().defaultBank, topic_id: payload.topic_id, quantity: payload.quantity, correct: payload.correct, wrong, module })
     .select()
     .single();
   if (error) throw error;
@@ -245,13 +272,13 @@ export const api = {
     if (clean === "flashcards") return (await listFlashcards(path.includes("due_only=true"))) as { data: T };
     if (clean === "questions") {
       const supabase = getSupabase();
-      const { data, error } = await supabase.from("question_logs").select("*").order("logged_at", { ascending: false }).order("id", { ascending: false });
+      const { data, error } = await supabase.from("question_logs").select("*").eq("module", activeModule()).order("logged_at", { ascending: false }).order("id", { ascending: false });
       if (error) throw error;
       return { data: data as T };
     }
     if (clean === "simulations") {
       const supabase = getSupabase();
-      const { data, error } = await supabase.from("simulations").select("*").order("simulation_date", { ascending: false });
+      const { data, error } = await supabase.from("simulations").select("*").eq("module", activeModule()).order("simulation_date", { ascending: false });
       if (error) throw error;
       return { data: data as T };
     }
@@ -262,13 +289,13 @@ export const api = {
     const clean = route(path);
     if (clean === "topics") {
       const supabase = getSupabase();
-      const { data, error } = await supabase.from("topics").insert(payload as Record<string, unknown>).select().single();
+      const { data, error } = await supabase.from("topics").insert({ ...(payload as Record<string, unknown>), module: activeModule() }).select().single();
       if (error) throw error;
       return { data: data as T };
     }
     if (clean === "flashcards") {
       const supabase = getSupabase();
-      const { data, error } = await supabase.from("flashcards").insert({ ...(payload as object), next_review_at: addDays(1) }).select("*, topic:topics(*)").single();
+      const { data, error } = await supabase.from("flashcards").insert({ ...(payload as object), module: activeModule(), next_review_at: addDays(1) }).select("*, topic:topics(*)").single();
       if (error) throw error;
       return { data: data as T };
     }
@@ -294,7 +321,7 @@ export const api = {
       const supabase = getSupabase();
       const item = payload as { total_questions: number; correct: number; notes?: string };
       const score = Number(((item.correct / item.total_questions) * 100).toFixed(1));
-      const { data, error } = await supabase.from("simulations").insert({ ...item, score }).select().single();
+      const { data, error } = await supabase.from("simulations").insert({ ...item, score, module: activeModule() }).select().single();
       if (error) throw error;
       return { data: data as T };
     }

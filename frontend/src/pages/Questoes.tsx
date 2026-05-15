@@ -4,11 +4,13 @@ import { toast } from "sonner";
 
 import { Badge, Button, Card, Input, Select } from "../components/ui";
 import { api, QuestionLog, Topic } from "../lib/api";
+import { currentModuleConfig } from "../lib/modules";
 
 export default function Questoes() {
   const [topics, setTopics] = useState<Topic[]>([]);
   const [logs, setLogs] = useState<QuestionLog[]>([]);
-  const [form, setForm] = useState({ bank: "FCC", topic_id: 0, quantity: 20, correct: 0 });
+  const module = currentModuleConfig();
+  const [form, setForm] = useState({ bank: module.defaultBank, topic_id: 0, quantity: 20, correct: 0 });
 
   const load = async () => {
     const [topicsRes, logsRes] = await Promise.all([api.get<Topic[]>("/topics"), api.get<QuestionLog[]>("/questions")]);
@@ -31,7 +33,7 @@ export default function Questoes() {
   return (
     <div className="space-y-6">
       <section>
-        <p className="text-sm uppercase tracking-[0.28em] text-accent">Questões FCC</p>
+        <p className="text-sm uppercase tracking-[0.28em] text-accent">{module.questionLabel}</p>
         <h2 className="mt-2 text-3xl font-semibold">Registro de desempenho</h2>
       </section>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, Badge } from "../components/ui";
 import { api, Dashboard as DashboardType } from "../lib/api";
 import { pct } from "../lib/utils";
+import { currentModuleConfig } from "../lib/modules";
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardType | null>(null);
@@ -13,6 +14,7 @@ export default function Dashboard() {
   }, []);
 
   if (!data) return <div className="text-zinc-400">Carregando painel...</div>;
+  const module = currentModuleConfig();
 
   const stats = [
     { label: "dias até a prova", value: data.days_remaining, icon: CalendarDays },
@@ -25,9 +27,9 @@ export default function Dashboard() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-sm uppercase tracking-[0.28em] text-accent">TJ • Analista de TI</p>
+          <p className="text-sm uppercase tracking-[0.28em] text-accent">{module.target}</p>
           <h2 className="mt-2 text-3xl font-semibold">Painel de comando</h2>
-          <p className="mt-2 max-w-2xl text-zinc-400">Prova em 09/08. O agente prioriza peso, erros, revisões vencidas e tempo restante.</p>
+          <p className="mt-2 max-w-2xl text-zinc-400">O agente prioriza peso, erros, revisões vencidas e tempo restante.</p>
         </div>
         <Badge>Próximo simulado: {new Date(data.next_simulation).toLocaleDateString("pt-BR")}</Badge>
       </section>
