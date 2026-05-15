@@ -1,0 +1,13 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+*.db
+*.db-journal
+backend/storage/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+.vercel/
+.env
+.env.*
