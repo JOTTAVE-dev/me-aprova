@@ -25,7 +25,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <section className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <p className="text-sm uppercase tracking-[0.28em] text-accent">FCC • Analista de TI</p>
+          <p className="text-sm uppercase tracking-[0.28em] text-accent">TJ • Analista de TI</p>
           <h2 className="mt-2 text-3xl font-semibold">Painel de comando</h2>
           <p className="mt-2 max-w-2xl text-zinc-400">Prova em 09/08. O agente prioriza peso, erros, revisões vencidas e tempo restante.</p>
         </div>

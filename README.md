@@ -1,4 +1,4 @@
-# AGENTE FCC TI
+# Me Aprova no TJ
 
 MVP de planner inteligente para estudos de concursos FCC, feito para rodar na Vercel usando Supabase desde o inicio.
 

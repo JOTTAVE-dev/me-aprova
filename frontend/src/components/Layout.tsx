@@ -23,7 +23,7 @@ export default function Layout() {
           </div>
           <div>
             <p className="text-sm text-zinc-400">planner inteligente</p>
-            <h1 className="text-lg font-semibold">AGENTE FCC TI</h1>
+            <h1 className="text-lg font-semibold">Me Aprova no TJ</h1>
           </div>
         </div>
         <nav className="space-y-1">
@@ -46,8 +46,8 @@ export default function Layout() {
       <div className="xl:pl-72">
         <header className="sticky top-0 z-10 border-b border-white/10 bg-background/85 px-4 py-3 backdrop-blur xl:hidden">
           <div className="flex items-center justify-between">
-            <strong>AGENTE FCC TI</strong>
-            <span className="text-xs text-zinc-400">FCC • Analista TI</span>
+            <strong>Me Aprova no TJ</strong>
+            <span className="text-xs text-zinc-400">TJ • Analista TI</span>
           </div>
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {nav.slice(0, 6).map((item) => (

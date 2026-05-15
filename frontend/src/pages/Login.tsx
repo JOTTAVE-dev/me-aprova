@@ -8,7 +8,7 @@ export default function Login() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
       <Card className="w-full max-w-md">
         <p className="text-sm uppercase tracking-[0.28em] text-accent">acesso local</p>
-        <h1 className="mt-3 text-3xl font-semibold">AGENTE FCC TI</h1>
+        <h1 className="mt-3 text-3xl font-semibold">Me Aprova no TJ</h1>
         <div className="mt-6 space-y-3">
           <Input defaultValue="candidato@local" aria-label="Email" />
           <Input defaultValue="local" type="password" aria-label="Senha" />
