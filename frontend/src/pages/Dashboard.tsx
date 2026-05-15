@@ -8,14 +8,14 @@ import { currentModuleConfig } from "../lib/modules";
 import { pct } from "../lib/utils";
 
 const skills = [
-  { name: "Redes", value: 60 },
-  { name: "Linux", value: 40 },
-  { name: "Python", value: 70 },
-  { name: "Cloud", value: 15 },
-  { name: "DevSecOps", value: 5 },
+  { name: "Redes", value: 0 },
+  { name: "Linux", value: 0 },
+  { name: "Python", value: 0 },
+  { name: "Cloud", value: 0 },
+  { name: "DevSecOps", value: 0 },
 ];
 
-const weeks = Array.from({ length: 28 }, (_, index) => [0, 25, 55, 85][(index * 7) % 4]);
+const weeks = Array.from({ length: 28 }, () => 0);
 
 function CyberDashboard({ data }: { data: DashboardType }) {
   const phase = data.progress < 20 ? "Fundamentos" : data.progress < 45 ? "Redes e Monitoramento" : data.progress < 70 ? "Blue Team" : "Cloud Security";
@@ -59,7 +59,7 @@ function CyberDashboard({ data }: { data: DashboardType }) {
               </div>
               <div className="rounded-md bg-white/5 p-3">
                 <p className="text-zinc-500">Nível</p>
-                <p className="mt-1 font-medium">Blue Team Explorer</p>
+                <p className="mt-1 font-medium">Iniciante</p>
               </div>
             </div>
           </div>
@@ -68,8 +68,8 @@ function CyberDashboard({ data }: { data: DashboardType }) {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Streak", value: "7 dias", icon: Flame },
-          { label: "Horas estudadas", value: `${Math.max(3, data.total_questions * 2)}h`, icon: CalendarDays },
+          { label: "Streak", value: "0 dias", icon: Flame },
+          { label: "Horas estudadas", value: `${data.total_questions * 2}h`, icon: CalendarDays },
           { label: "Módulos concluídos", value: modulesDone, icon: BookOpenCheck },
           { label: "Projetos concluídos", value: Math.floor(data.total_questions / 3), icon: Trophy },
         ].map((stat) => (
@@ -85,7 +85,7 @@ function CyberDashboard({ data }: { data: DashboardType }) {
         <Card>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold">Evolução semanal</h3>
-            <Badge>XP +420</Badge>
+            <Badge>XP +0</Badge>
           </div>
           <div className="mt-6 flex h-40 items-end gap-2">
             {weeks.map((height, index) => (
@@ -130,7 +130,7 @@ function CyberDashboard({ data }: { data: DashboardType }) {
           <h3 className="mt-3 font-semibold">Consistência</h3>
           <div className="mt-4 grid grid-cols-7 gap-1">
             {Array.from({ length: 28 }, (_, index) => (
-              <span key={index} className={`h-5 rounded-sm ${index % 5 === 0 ? "bg-white/10" : "bg-accent/70"}`} />
+              <span key={index} className="h-5 rounded-sm bg-white/10" />
             ))}
           </div>
         </Card>

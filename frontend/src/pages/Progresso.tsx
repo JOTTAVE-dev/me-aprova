@@ -8,11 +8,11 @@ import { pct } from "../lib/utils";
 import Placeholder from "./Placeholder";
 
 const skillRank = [
-  ["Python", 70],
-  ["Redes", 60],
-  ["Linux", 40],
-  ["Cloud", 15],
-  ["DevSecOps", 5],
+  ["Python", 0],
+  ["Redes", 0],
+  ["Linux", 0],
+  ["Cloud", 0],
+  ["DevSecOps", 0],
 ] as const;
 
 export default function Progresso() {
@@ -36,8 +36,8 @@ export default function Progresso() {
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Horas estudadas", value: `${Math.max(3, data.total_questions * 2)}h`, icon: Timer },
-          { label: "Streak", value: "7 dias", icon: Flame },
+          { label: "Horas estudadas", value: `${data.total_questions * 2}h`, icon: Timer },
+          { label: "Streak", value: "0 dias", icon: Flame },
           { label: "Conclusão", value: pct(data.progress), icon: Trophy },
           { label: "Consistência", value: "82%", icon: CalendarCheck },
         ].map((item) => (
@@ -58,7 +58,7 @@ export default function Progresso() {
           <div className="mt-6 grid grid-cols-12 items-end gap-2">
             {Array.from({ length: 12 }, (_, index) => (
               <div key={index} className="h-32 rounded-md bg-white/10">
-                <div className="rounded-md bg-accent" style={{ height: `${20 + index * 6}%` }} />
+                <div className="rounded-md bg-accent" style={{ height: "0%" }} />
               </div>
             ))}
           </div>

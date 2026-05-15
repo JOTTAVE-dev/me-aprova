@@ -50,11 +50,11 @@ export default function Layout() {
           <div className="mb-5 rounded-lg border border-white/10 bg-white/[0.04] p-3">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Nível atual</p>
             <div className="mt-2 flex items-center justify-between">
-              <span className="font-semibold">Blue Team Explorer</span>
-              <span className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-black">Lv. 3</span>
+              <span className="font-semibold">Iniciante</span>
+              <span className="rounded-md bg-accent px-2 py-1 text-xs font-semibold text-black">Lv. 0</span>
             </div>
             <div className="mt-3 h-2 rounded-full bg-white/10">
-              <div className="h-full w-[42%] rounded-full bg-accent" />
+              <div className="h-full w-0 rounded-full bg-accent" />
             </div>
           </div>
         ) : null}

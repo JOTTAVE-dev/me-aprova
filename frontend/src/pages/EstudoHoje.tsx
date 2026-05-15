@@ -41,7 +41,7 @@ function CyberStudyToday({ data }: { data: TodayStudy }) {
             <Button>
               <Flame size={16} /> Começar sessão
             </Button>
-            <Badge>XP de hoje: +80</Badge>
+            <Badge>XP de hoje: +0</Badge>
             <Badge>Tempo: 2h30</Badge>
           </div>
         </Card>

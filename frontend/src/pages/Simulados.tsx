@@ -8,10 +8,10 @@ import { currentModuleConfig } from "../lib/modules";
 import { pct } from "../lib/utils";
 
 const projects = [
-  { name: "Dashboard de Monitoramento", difficulty: "Intermediário", tech: ["Python", "FastAPI", "Logs", "Wazuh"], progress: 25, description: "Crie um painel simples para visualizar eventos e alertas." },
-  { name: "Scanner de Rede", difficulty: "Iniciante", tech: ["Python", "Nmap", "Relatórios"], progress: 45, description: "Escaneie sua própria rede e gere um relatório de portas e serviços." },
-  { name: "Sistema de Logs", difficulty: "Intermediário", tech: ["ELK", "Wazuh", "Linux"], progress: 10, description: "Centralize logs e documente eventos relevantes." },
-  { name: "Laboratório Blue Team", difficulty: "Avançado", tech: ["Ubuntu", "Windows Server", "Active Directory"], progress: 5, description: "Monte um ambiente defensivo com AD, logs e simulação de incidentes." },
+  { name: "Dashboard de Monitoramento", difficulty: "Intermediário", tech: ["Python", "FastAPI", "Logs", "Wazuh"], progress: 0, description: "Crie um painel simples para visualizar eventos e alertas." },
+  { name: "Scanner de Rede", difficulty: "Iniciante", tech: ["Python", "Nmap", "Relatórios"], progress: 0, description: "Escaneie sua própria rede e gere um relatório de portas e serviços." },
+  { name: "Sistema de Logs", difficulty: "Intermediário", tech: ["ELK", "Wazuh", "Linux"], progress: 0, description: "Centralize logs e documente eventos relevantes." },
+  { name: "Laboratório Blue Team", difficulty: "Avançado", tech: ["Ubuntu", "Windows Server", "Active Directory"], progress: 0, description: "Monte um ambiente defensivo com AD, logs e simulação de incidentes." },
 ];
 
 function CyberProjects({ items, form, setForm, submit }: {
