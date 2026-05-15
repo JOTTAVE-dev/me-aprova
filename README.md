@@ -1,18 +1,51 @@
 # AGENTE FCC TI
 
-MVP de planner inteligente para estudos de concursos FCC, com React, FastAPI e banco relacional.
+MVP de planner inteligente para estudos de concursos FCC, feito para rodar na Vercel usando Supabase desde o inicio.
+
+## Stack atual
+
+- React + TypeScript + Vite
+- TailwindCSS
+- React Router
+- Sonner
+- Supabase Postgres/Auth-ready client
+- Vercel static hosting
+
+O projeto agora e frontend-first: a Vercel publica o React/Vite e o Supabase guarda os dados.
+
+## Configurar Supabase
+
+1. Abra o Supabase.
+2. Va em SQL Editor.
+3. Cole e execute o arquivo:
+
+```text
+supabase/schema.sql
+```
+
+Esse script cria as tabelas, indices e politicas RLS publicas para o MVP.
+
+## Variaveis na Vercel
+
+Em Vercel > Project > Settings > Environment Variables, cadastre:
+
+```text
+VITE_SUPABASE_URL=https://mjufredlcvkeilpnodck.supabase.co
+VITE_SUPABASE_ANON_KEY=sua_chave_anon_public_aqui
+```
+
+A chave anon fica no Supabase em Project Settings > API.
 
 ## Rodar localmente
 
-Backend:
+Crie `frontend/.env.local`:
 
-```powershell
-cd backend
-python -m pip install -r requirements.txt
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```text
+VITE_SUPABASE_URL=https://mjufredlcvkeilpnodck.supabase.co
+VITE_SUPABASE_ANON_KEY=sua_chave_anon_public_aqui
 ```
 
-Frontend:
+Depois rode:
 
 ```powershell
 cd frontend
@@ -20,19 +53,18 @@ npm install
 npm run dev -- --port 5173
 ```
 
-URLs:
-
-- App: http://127.0.0.1:5173
-- API: http://127.0.0.1:8000/docs
-
-## Supabase
-
-Em produção, configure a variável:
+App local:
 
 ```text
-DATABASE_URL=postgresql://...
+http://127.0.0.1:5173
 ```
 
-Use a connection string do Supabase com `sslmode=require`.
+## Deploy
 
-Na Vercel, adicione essa variável em Project Settings > Environment Variables e faça um redeploy.
+O `vercel.json` ja aponta para:
+
+- build: `cd frontend && npm install && npm run build`
+- output: `frontend/dist`
+- SPA rewrite para `index.html`
+
+Depois de salvar as variaveis de ambiente, faca redeploy na Vercel.
