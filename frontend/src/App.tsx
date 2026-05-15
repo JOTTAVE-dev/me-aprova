@@ -1,4 +1,5 @@
 import { Route, Routes } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 import Layout from "./components/Layout";
 import Conteudos from "./pages/Conteudos";
@@ -9,8 +10,36 @@ import Questoes from "./pages/Questoes";
 import Simulados from "./pages/Simulados";
 import Placeholder from "./pages/Placeholder";
 import Login from "./pages/Login";
+import SetupRequired from "./pages/SetupRequired";
+import { isSupabaseConfigured, supabase } from "./lib/supabase";
 
 export default function App() {
+  const [setup, setSetup] = useState<"checking" | "ready" | "env" | "schema">("checking");
+  const [detail, setDetail] = useState<string>();
+
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) {
+      setSetup("env");
+      return;
+    }
+
+    supabase
+      .from("topics")
+      .select("id", { count: "exact", head: true })
+      .then(({ error }) => {
+        if (error) {
+          setDetail(error.message);
+          setSetup("schema");
+          return;
+        }
+        setSetup("ready");
+      });
+  }, []);
+
+  if (setup === "checking") return <SetupRequired kind="checking" />;
+  if (setup === "env") return <SetupRequired kind="env" />;
+  if (setup === "schema") return <SetupRequired kind="schema" detail={detail} />;
+
   return (
     <Routes>
       <Route path="/login" element={<Login />} />

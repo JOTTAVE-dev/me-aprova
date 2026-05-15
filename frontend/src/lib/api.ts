@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabase } from "./supabase";
 import { seedTopics } from "./seedData";
 
 export type Topic = {
@@ -95,6 +95,7 @@ function nextSunday() {
 }
 
 async function ensureSeeded() {
+  const supabase = getSupabase();
   const { count, error } = await supabase.from("topics").select("*", { count: "exact", head: true });
   if (error) throw error;
   if ((count ?? 0) > 0) return;
@@ -116,6 +117,7 @@ async function ensureSeeded() {
 }
 
 async function listTopics(category?: string) {
+  const supabase = getSupabase();
   await ensureSeeded();
   let query = supabase.from("topics").select("*").order("category").order("priority", { ascending: false }).order("name");
   if (category) query = query.eq("category", category);
@@ -125,6 +127,7 @@ async function listTopics(category?: string) {
 }
 
 async function getDashboard(): ApiResponse<Dashboard> {
+  const supabase = getSupabase();
   const topics = await listTopics();
   const { data: logs, error } = await supabase.from("question_logs").select("*");
   if (error) throw error;
@@ -150,6 +153,7 @@ async function getDashboard(): ApiResponse<Dashboard> {
 }
 
 async function getTodayStudy(): ApiResponse<TodayStudy> {
+  const supabase = getSupabase();
   const topics = await listTopics();
   const today = todayIso();
   const { data: cards, error } = await supabase
@@ -188,6 +192,7 @@ async function getTodayStudy(): ApiResponse<TodayStudy> {
 }
 
 async function listFlashcards(dueOnly = false): ApiResponse<Flashcard[]> {
+  const supabase = getSupabase();
   await ensureSeeded();
   let query = supabase.from("flashcards").select("*, topic:topics(*)").order("next_review_at");
   if (dueOnly) query = query.lte("next_review_at", todayIso());
@@ -197,6 +202,7 @@ async function listFlashcards(dueOnly = false): ApiResponse<Flashcard[]> {
 }
 
 async function createQuestionLog(payload: Partial<QuestionLog> & { topic_id: number; quantity: number; correct: number; bank?: string }) {
+  const supabase = getSupabase();
   const wrong = Math.max(payload.quantity - payload.correct, 0);
   const { data: topic, error: topicError } = await supabase.from("topics").select("*").eq("id", payload.topic_id).single();
   if (topicError) throw topicError;
@@ -238,11 +244,13 @@ export const api = {
     if (clean === "topics") return { data: (await listTopics()) as T };
     if (clean === "flashcards") return (await listFlashcards(path.includes("due_only=true"))) as { data: T };
     if (clean === "questions") {
+      const supabase = getSupabase();
       const { data, error } = await supabase.from("question_logs").select("*").order("logged_at", { ascending: false }).order("id", { ascending: false });
       if (error) throw error;
       return { data: data as T };
     }
     if (clean === "simulations") {
+      const supabase = getSupabase();
       const { data, error } = await supabase.from("simulations").select("*").order("simulation_date", { ascending: false });
       if (error) throw error;
       return { data: data as T };
@@ -253,16 +261,19 @@ export const api = {
   async post<T>(path: string, payload?: unknown): ApiResponse<T> {
     const clean = route(path);
     if (clean === "topics") {
+      const supabase = getSupabase();
       const { data, error } = await supabase.from("topics").insert(payload as Record<string, unknown>).select().single();
       if (error) throw error;
       return { data: data as T };
     }
     if (clean === "flashcards") {
+      const supabase = getSupabase();
       const { data, error } = await supabase.from("flashcards").insert({ ...(payload as object), next_review_at: addDays(1) }).select("*, topic:topics(*)").single();
       if (error) throw error;
       return { data: data as T };
     }
     if (clean.startsWith("flashcards/") && clean.endsWith("/review")) {
+      const supabase = getSupabase();
       const id = Number(clean.split("/")[1]);
       const remembered = path.includes("remembered=true");
       const { data: card, error: cardError } = await supabase.from("flashcards").select("*").eq("id", id).single();
@@ -280,6 +291,7 @@ export const api = {
     }
     if (clean === "questions") return createQuestionLog(payload as Parameters<typeof createQuestionLog>[0]) as ApiResponse<T>;
     if (clean === "simulations") {
+      const supabase = getSupabase();
       const item = payload as { total_questions: number; correct: number; notes?: string };
       const score = Number(((item.correct / item.total_questions) * 100).toFixed(1));
       const { data, error } = await supabase.from("simulations").insert({ ...item, score }).select().single();
@@ -290,6 +302,7 @@ export const api = {
   },
 
   async delete(path: string): Promise<{ data: { ok: boolean } }> {
+    const supabase = getSupabase();
     const clean = route(path);
     const [resource, id] = clean.split("/");
     const table = resource === "topics" ? "topics" : resource === "flashcards" ? "flashcards" : null;
