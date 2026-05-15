@@ -1,10 +1,10 @@
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Target } from "lucide-react";
+import { AlertTriangle, BriefcaseBusiness, CalendarDays, CheckCircle2, Clock, Target } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { Card, Badge } from "../components/ui";
+import { Badge, Card } from "../components/ui";
 import { api, Dashboard as DashboardType } from "../lib/api";
-import { pct } from "../lib/utils";
 import { currentModuleConfig } from "../lib/modules";
+import { pct } from "../lib/utils";
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardType | null>(null);
@@ -14,14 +14,23 @@ export default function Dashboard() {
   }, []);
 
   if (!data) return <div className="text-zinc-400">Carregando painel...</div>;
-  const module = currentModuleConfig();
 
-  const stats = [
-    { label: "dias até a prova", value: data.days_remaining, icon: CalendarDays },
-    { label: "progresso do edital", value: pct(data.progress), icon: CheckCircle2 },
-    { label: "média de acertos", value: pct(data.average_accuracy), icon: Target },
-    { label: "questões feitas", value: data.total_questions, icon: Clock },
-  ];
+  const module = currentModuleConfig();
+  const isCyber = module.id === "cyber";
+
+  const stats = isCyber
+    ? [
+        { label: "janela da jornada", value: "6-9m", icon: CalendarDays },
+        { label: "progresso das trilhas", value: pct(data.progress), icon: CheckCircle2 },
+        { label: "média nas práticas", value: pct(data.average_accuracy), icon: Target },
+        { label: "labs registrados", value: data.total_questions, icon: Clock },
+      ]
+    : [
+        { label: "dias até a prova", value: data.days_remaining, icon: CalendarDays },
+        { label: "progresso do edital", value: pct(data.progress), icon: CheckCircle2 },
+        { label: "média de acertos", value: pct(data.average_accuracy), icon: Target },
+        { label: "questões feitas", value: data.total_questions, icon: Clock },
+      ];
 
   return (
     <div className="space-y-6">
@@ -29,9 +38,13 @@ export default function Dashboard() {
         <div>
           <p className="text-sm uppercase tracking-[0.28em] text-accent">{module.target}</p>
           <h2 className="mt-2 text-3xl font-semibold">Painel de comando</h2>
-          <p className="mt-2 max-w-2xl text-zinc-400">O agente prioriza peso, erros, revisões vencidas e tempo restante.</p>
+          <p className="mt-2 max-w-2xl text-zinc-400">
+            {isCyber
+              ? "Acompanhe trilhas, laboratórios, projetos de portfólio, ferramentas e pontos fracos para entrar no mercado."
+              : "O agente prioriza peso, erros, revisões vencidas e tempo restante."}
+          </p>
         </div>
-        <Badge>Próximo simulado: {new Date(data.next_simulation).toLocaleDateString("pt-BR")}</Badge>
+        <Badge>{isCyber ? "Meta: primeira vaga Jr" : `Próximo simulado: ${new Date(data.next_simulation).toLocaleDateString("pt-BR")}`}</Badge>
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -50,13 +63,13 @@ export default function Dashboard() {
         <Card>
           <div className="flex items-center gap-2">
             <AlertTriangle className="text-amber" size={18} />
-            <h3 className="font-semibold">Revisões vencidas</h3>
+            <h3 className="font-semibold">{isCyber ? "Revisões e práticas pendentes" : "Revisões vencidas"}</h3>
           </div>
           <p className="mt-4 text-4xl font-semibold">{data.overdue_reviews}</p>
-          <p className="mt-2 text-sm text-zinc-400">Flashcards e temas com repetição obrigatória.</p>
+          <p className="mt-2 text-sm text-zinc-400">{isCyber ? "Conceitos, ferramentas e labs para repetir." : "Flashcards e temas com repetição obrigatória."}</p>
         </Card>
-        <Card className="lg:col-span-1">
-          <h3 className="font-semibold">Temas fortes</h3>
+        <Card>
+          <h3 className="font-semibold">{isCyber ? "Habilidades fortes" : "Temas fortes"}</h3>
           <div className="mt-4 space-y-3">
             {data.strong_topics.length === 0 ? <p className="text-sm text-zinc-500">Ainda sem histórico suficiente.</p> : null}
             {data.strong_topics.map((topic) => (
@@ -68,7 +81,7 @@ export default function Dashboard() {
           </div>
         </Card>
         <Card>
-          <h3 className="font-semibold">Pontos fracos</h3>
+          <h3 className="font-semibold">{isCyber ? "Habilidades a reforçar" : "Pontos fracos"}</h3>
           <div className="mt-4 space-y-3">
             {data.weak_topics.map((topic) => (
               <div key={topic.id} className="flex items-center justify-between gap-3 text-sm">
@@ -79,6 +92,26 @@ export default function Dashboard() {
           </div>
         </Card>
       </section>
+
+      {isCyber ? (
+        <section className="grid gap-4 lg:grid-cols-3">
+          <Card>
+            <BriefcaseBusiness className="text-accent" size={20} />
+            <h3 className="mt-3 font-semibold">Metas profissionais</h3>
+            <p className="mt-2 text-sm text-zinc-400">SOC Analyst Jr, Blue Team Jr, Cloud Security Jr, DevSecOps Intern/Jr.</p>
+          </Card>
+          <Card>
+            <Target className="text-accent" size={20} />
+            <h3 className="mt-3 font-semibold">Portfólio</h3>
+            <p className="mt-2 text-sm text-zinc-400">Priorize Wazuh, scanner de rede, dashboard de logs e laboratório Blue Team.</p>
+          </Card>
+          <Card>
+            <Clock className="text-accent" size={20} />
+            <h3 className="mt-3 font-semibold">Rotina ideal</h3>
+            <p className="mt-2 text-sm text-zinc-400">Teoria, prática, projeto e anotações todos os dias.</p>
+          </Card>
+        </section>
+      ) : null}
     </div>
   );
 }

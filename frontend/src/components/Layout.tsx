@@ -1,22 +1,23 @@
 import { Award, BarChart3, BookOpen, Brain, CalendarCheck, ClipboardList, Gauge, Layers, LogOut, Settings, Target, TrendingDown } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
+
 import { currentModuleConfig } from "../lib/modules";
 
 const nav = [
   { to: "/", label: "Dashboard", icon: Gauge },
-  { to: "/hoje", label: "Estudo de Hoje", icon: CalendarCheck },
-  { to: "/conteudos", label: "Conteúdos", icon: Layers },
-  { to: "/questoes", label: "Questões", icon: ClipboardList },
+  { to: "/hoje", label: "Estudo de Hoje", cyberLabel: "Plano de Hoje", icon: CalendarCheck },
+  { to: "/conteudos", label: "Conteúdos", cyberLabel: "Trilhas", icon: Layers },
+  { to: "/questoes", label: "Questões", cyberLabel: "Práticas", icon: ClipboardList },
   { to: "/flashcards", label: "Flashcards", icon: Brain },
-  { to: "/simulados", label: "Simulados", icon: Target },
+  { to: "/simulados", label: "Simulados", cyberLabel: "Laboratórios", icon: Target },
   { to: "/relatorios", label: "Relatórios", icon: BarChart3 },
   { to: "/pontos-fracos", label: "Pontos Fracos", icon: TrendingDown },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-const cyberNav = [
-  { to: "/certificacoes", label: "Certificações", icon: Award },
-];
+const cyberNav = [{ to: "/certificacoes", label: "Certificações", icon: Award }];
+
+type NavItem = (typeof nav)[number] | (typeof cyberNav)[number];
 
 export default function Layout() {
   const module = currentModuleConfig();
@@ -25,6 +26,10 @@ export default function Layout() {
   function changeModule() {
     window.localStorage.removeItem("me_aprova_active_module");
     window.location.href = "/login";
+  }
+
+  function labelFor(item: NavItem): string {
+    return module.id === "cyber" && "cyberLabel" in item && item.cyberLabel ? item.cyberLabel : item.label;
   }
 
   return (
@@ -51,7 +56,7 @@ export default function Layout() {
               }
             >
               <item.icon size={18} />
-              {item.label}
+              {labelFor(item)}
             </NavLink>
           ))}
         </nav>
@@ -69,7 +74,7 @@ export default function Layout() {
           <nav className="mt-3 flex gap-2 overflow-x-auto pb-1">
             {visibleNav.slice(0, 7).map((item) => (
               <NavLink key={item.to} to={item.to} className="rounded-md bg-white/5 px-3 py-2 text-xs text-zinc-300">
-                {item.label}
+                {labelFor(item)}
               </NavLink>
             ))}
           </nav>
