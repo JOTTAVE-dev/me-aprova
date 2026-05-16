@@ -16,28 +16,51 @@ import Progresso from "./pages/Progresso";
 import { isSupabaseConfigured, supabase } from "./lib/supabase";
 import { getCurrentModule } from "./lib/modules";
 
+const SETUP_CHECK_TIMEOUT_MS = 3500;
+
 export default function App() {
   const selectedModule = getCurrentModule();
   const [setup, setSetup] = useState<"checking" | "ready" | "env" | "schema">("checking");
   const [detail, setDetail] = useState<string>();
 
   useEffect(() => {
+    let cancelled = false;
+
     if (!isSupabaseConfigured || !supabase) {
       setSetup("env");
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
+
+    const timeout = window.setTimeout(() => {
+      if (cancelled) return;
+      setSetup("ready");
+    }, SETUP_CHECK_TIMEOUT_MS);
 
     supabase
       .from("topics")
       .select("id,module", { count: "exact", head: true })
       .then(({ error }) => {
+        if (cancelled) return;
+        window.clearTimeout(timeout);
         if (error) {
           setDetail(error.message);
           setSetup("schema");
           return;
         }
         setSetup("ready");
+      }, (error: unknown) => {
+        if (cancelled) return;
+        window.clearTimeout(timeout);
+        setDetail(error instanceof Error ? error.message : "Não foi possível verificar o Supabase agora.");
+        setSetup("ready");
       });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
   }, []);
 
   if (!selectedModule) return <Login />;

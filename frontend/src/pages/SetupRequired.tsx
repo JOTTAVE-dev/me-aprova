@@ -15,7 +15,7 @@ export default function SetupRequired({ kind, detail }: SetupRequiredProps) {
       <Card className="w-full max-w-2xl">
         <div className="flex items-start gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent text-black">
-            {isChecking ? <RotateCw size={20} /> : <AlertTriangle size={20} />}
+            {isChecking ? <RotateCw className="animate-spin" size={20} /> : <AlertTriangle size={20} />}
           </div>
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-accent">Me Aprova</p>
@@ -32,7 +32,14 @@ export default function SetupRequired({ kind, detail }: SetupRequiredProps) {
           </div>
         </div>
 
-        {!isChecking ? (
+        {isChecking ? (
+          <div className="mt-6">
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-1/2 animate-pulse rounded-full bg-accent" />
+            </div>
+            <p className="mt-3 text-sm text-zinc-500">Se a resposta demorar, o app continua carregando automaticamente.</p>
+          </div>
+        ) : (
           <div className="mt-6 space-y-4">
             {kind === "env" ? (
               <div className="rounded-lg border border-white/10 bg-black/25 p-4">
@@ -61,7 +68,7 @@ VITE_SUPABASE_ANON_KEY=sua_chave_anon_public`}
 
             <Button onClick={() => window.location.reload()}>Recarregar</Button>
           </div>
-        ) : null}
+        )}
       </Card>
     </main>
   );
