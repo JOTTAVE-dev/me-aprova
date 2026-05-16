@@ -56,7 +56,10 @@ function useStudySession(data: TodayStudy) {
 
 function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[]; done: string[]; onToggle: (id: string) => void; subDoneKey: string }) {
   const progress = Math.round((done.length / tasks.length) * 100);
-  const [expandedTask, setExpandedTask] = useState<string | null>(tasks.find((task) => task.subtasks?.length)?.id ?? null);
+  const [expandedTasks, setExpandedTasks] = useState<string[]>(() => {
+    const firstExpandable = tasks.find((task) => task.subtasks?.length)?.id;
+    return firstExpandable ? [firstExpandable] : [];
+  });
   const [subDone, setSubDone] = useState<string[]>(() => {
     try {
       const saved = window.localStorage.getItem(subDoneKey);
@@ -74,6 +77,10 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
     setSubDone((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
   }
 
+  function toggleAccordion(id: string) {
+    setExpandedTasks((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
   return (
     <section>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -84,15 +91,15 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
         <Badge>{progress}% concluído</Badge>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid items-start gap-4 md:grid-cols-2">
         {tasks.map((task, index) => {
           const checked = done.includes(task.id);
           const Icon = task.icon;
-          const isExpanded = expandedTask === task.id;
+          const isExpanded = expandedTasks.includes(task.id);
 
           return (
             <div key={task.id}>
-              <Card className={`h-full transition duration-300 hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
+              <Card className={`transition duration-300 hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
                 <div className="flex items-start gap-4">
                   <input
                     type="checkbox"
@@ -118,7 +125,7 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
                   </div>
                   <button
                     type="button"
-                    onClick={() => setExpandedTask((current) => (current === task.id ? null : task.id))}
+                    onClick={() => toggleAccordion(task.id)}
                     className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-zinc-300 transition hover:border-accent/40 hover:text-accent"
                     aria-label={isExpanded ? `Recolher ${task.title}` : `Expandir ${task.title}`}
                     aria-expanded={isExpanded}
