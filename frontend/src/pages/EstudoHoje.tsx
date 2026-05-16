@@ -1,4 +1,4 @@
-import { Brain, CheckCircle2, CheckSquare, Clock, Code2, Flame, Play } from "lucide-react";
+import { Brain, CheckCircle2, CheckSquare, ChevronDown, Clock, Code2, Flame, Play } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Badge, Button, Card } from "../components/ui";
@@ -11,6 +11,7 @@ type StudyTask = {
   time: string;
   topic: string;
   icon?: typeof Brain;
+  subtasks?: string[];
 };
 
 function TopicBlock({ title, topic, emptyText }: { title: string; topic: Topic | null; emptyText: string }) {
@@ -53,8 +54,25 @@ function useStudySession(data: TodayStudy) {
   return { done, sessionStarted, startSession, toggleTask };
 }
 
-function StudyTrail({ tasks, done, onToggle }: { tasks: StudyTask[]; done: string[]; onToggle: (id: string) => void }) {
+function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[]; done: string[]; onToggle: (id: string) => void; subDoneKey: string }) {
   const progress = Math.round((done.length / tasks.length) * 100);
+  const [expandedTask, setExpandedTask] = useState<string | null>(tasks.find((task) => task.subtasks?.length)?.id ?? null);
+  const [subDone, setSubDone] = useState<string[]>(() => {
+    try {
+      const saved = window.localStorage.getItem(subDoneKey);
+      return saved ? (JSON.parse(saved) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(subDoneKey, JSON.stringify(subDone));
+  }, [subDone, subDoneKey]);
+
+  function toggleSubtask(id: string) {
+    setSubDone((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
 
   return (
     <section>
@@ -72,7 +90,7 @@ function StudyTrail({ tasks, done, onToggle }: { tasks: StudyTask[]; done: strin
           const Icon = task.icon;
 
           return (
-            <label key={task.id} className="block cursor-pointer">
+            <div key={task.id}>
               <Card className={`h-full transition hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
                 <div className="flex items-start gap-4">
                   <input
@@ -88,19 +106,51 @@ function StudyTrail({ tasks, done, onToggle }: { tasks: StudyTask[]; done: strin
                         <Icon size={20} />
                       </div>
                     ) : null}
-                    <div className="min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedTask((current) => (current === task.id ? null : task.id))}
+                      className="min-w-0 flex-1 text-left"
+                      aria-expanded={expandedTask === task.id}
+                    >
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge>Etapa {index + 1}</Badge>
                         <Badge>{task.time}</Badge>
                       </div>
                       <h3 className={`mt-3 font-semibold ${checked ? "text-accent" : ""}`}>{task.title}</h3>
                       <p className="mt-1 text-sm text-zinc-400">{task.topic}</p>
+                    </button>
+                  </div>
+                  {task.subtasks?.length ? (
+                    <ChevronDown className={`mt-1 shrink-0 text-zinc-400 transition ${expandedTask === task.id ? "rotate-180" : ""}`} size={18} />
+                  ) : checked ? (
+                    <CheckCircle2 className="shrink-0 text-accent" size={20} />
+                  ) : null}
+                </div>
+                {task.subtasks?.length && expandedTask === task.id ? (
+                  <div className="mt-5 rounded-md border border-white/10 bg-black/20 p-4">
+                    <p className="text-sm font-medium">Comandos essenciais</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {task.subtasks.map((subtask) => {
+                        const id = `${task.id}:${subtask}`;
+                        const subChecked = subDone.includes(id);
+
+                        return (
+                          <label key={id} className={`flex items-center gap-3 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm transition ${subChecked ? "border-accent/50 bg-accent/10 text-accent" : "text-zinc-300"}`}>
+                            <input
+                              type="checkbox"
+                              checked={subChecked}
+                              onChange={() => toggleSubtask(id)}
+                              className="h-4 w-4 rounded border-white/20 bg-black/30 accent-teal-400"
+                            />
+                            <span>{subtask}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
-                  {checked ? <CheckCircle2 className="shrink-0 text-accent" size={20} /> : null}
-                </div>
+                ) : null}
               </Card>
-            </label>
+            </div>
           );
         })}
       </div>
@@ -124,7 +174,14 @@ function TrailPreview({ tasksCount }: { tasksCount: number }) {
 
 function CyberStudyToday({ data }: { data: TodayStudy }) {
   const tasks: StudyTask[] = [
-    { id: "theory", title: "Teoria guiada", time: "40 min", topic: data.main_topic?.name ?? "Fundamentos pendentes", icon: Brain },
+    {
+      id: "theory",
+      title: "Teoria guiada",
+      time: "40 min",
+      topic: data.main_topic?.name ?? "Fundamentos pendentes",
+      icon: Brain,
+      subtasks: ["pwd", "ls", "cd", "mkdir", "touch", "cp", "mv", "rm", "cat", "less", "grep", "find", "chmod", "chown", "sudo", "man"],
+    },
     { id: "lab", title: "Laboratório prático", time: "60 min", topic: data.secondary_topic?.name ?? "Escolha um lab", icon: Code2 },
     { id: "project", title: "Projeto ou portfólio", time: "30 min", topic: "Documente evidências e comandos", icon: Play },
     { id: "notes", title: "Anotações e flashcards", time: "20 min", topic: "Revise conceitos vencidos", icon: CheckSquare },
@@ -160,7 +217,7 @@ function CyberStudyToday({ data }: { data: TodayStudy }) {
         </Card>
       </section>
 
-      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} /> : <TrailPreview tasksCount={tasks.length} />}
+      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} subDoneKey={`me_aprova_study_sub_done_${data.date}`} /> : <TrailPreview tasksCount={tasks.length} />}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -224,7 +281,7 @@ function GeneralStudyToday({ data }: { data: TodayStudy }) {
         </Card>
       </section>
 
-      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} /> : <TrailPreview tasksCount={tasks.length} />}
+      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} subDoneKey={`me_aprova_study_sub_done_${data.date}`} /> : <TrailPreview tasksCount={tasks.length} />}
 
       <section className="grid gap-4 lg:grid-cols-3">
         <TopicBlock title="Bloco 1 - teoria principal" topic={data.main_topic} emptyText="Registre questões para refinar o plano." />
