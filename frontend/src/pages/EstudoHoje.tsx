@@ -88,10 +88,11 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
         {tasks.map((task, index) => {
           const checked = done.includes(task.id);
           const Icon = task.icon;
+          const isExpanded = expandedTask === task.id;
 
           return (
             <div key={task.id}>
-              <Card className={`h-full transition hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
+              <Card className={`h-full transition duration-300 hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
                 <div className="flex items-start gap-4">
                   <input
                     type="checkbox"
@@ -106,29 +107,33 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
                         <Icon size={20} />
                       </div>
                     ) : null}
-                    <button
-                      type="button"
-                      onClick={() => setExpandedTask((current) => (current === task.id ? null : task.id))}
-                      className="min-w-0 flex-1 text-left"
-                      aria-expanded={expandedTask === task.id}
-                    >
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge>Etapa {index + 1}</Badge>
                         <Badge>{task.time}</Badge>
                       </div>
                       <h3 className={`mt-3 font-semibold ${checked ? "text-accent" : ""}`}>{task.title}</h3>
                       <p className="mt-1 text-sm text-zinc-400">{task.topic}</p>
-                    </button>
+                    </div>
                   </div>
-                  {task.subtasks?.length ? (
-                    <ChevronDown className={`mt-1 shrink-0 text-zinc-400 transition ${expandedTask === task.id ? "rotate-180" : ""}`} size={18} />
-                  ) : checked ? (
-                    <CheckCircle2 className="shrink-0 text-accent" size={20} />
-                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedTask((current) => (current === task.id ? null : task.id))}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/5 text-zinc-300 transition hover:border-accent/40 hover:text-accent"
+                    aria-label={isExpanded ? `Recolher ${task.title}` : `Expandir ${task.title}`}
+                    aria-expanded={isExpanded}
+                  >
+                    <ChevronDown className={`transition-transform duration-300 ease-out ${isExpanded ? "rotate-180" : ""}`} size={18} />
+                  </button>
                 </div>
-                {task.subtasks?.length && expandedTask === task.id ? (
-                  <div className="mt-5 rounded-md border border-white/10 bg-black/20 p-4">
-                    <p className="text-sm font-medium">Comandos essenciais</p>
+
+                <div className={`overflow-hidden transition-all duration-300 ease-out ${isExpanded ? "mt-5 max-h-[560px] opacity-100" : "max-h-0 opacity-0"}`}>
+                  <div className="rounded-md border border-white/10 bg-black/20 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium">{task.subtasks?.length ? "Comandos essenciais" : "Conteúdo da etapa"}</p>
+                      {checked ? <CheckCircle2 className="shrink-0 text-accent" size={18} /> : null}
+                    </div>
+                    {task.subtasks?.length ? (
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {task.subtasks.map((subtask) => {
                         const id = `${task.id}:${subtask}`;
@@ -147,8 +152,13 @@ function StudyTrail({ tasks, done, onToggle, subDoneKey }: { tasks: StudyTask[];
                         );
                       })}
                     </div>
+                    ) : (
+                      <div className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300">
+                        {task.topic}
+                      </div>
+                    )}
                   </div>
-                ) : null}
+                </div>
               </Card>
             </div>
           );
