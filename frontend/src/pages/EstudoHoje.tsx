@@ -5,6 +5,14 @@ import { Badge, Button, Card } from "../components/ui";
 import { api, TodayStudy, Topic } from "../lib/api";
 import { currentModuleConfig } from "../lib/modules";
 
+type StudyTask = {
+  id: string;
+  title: string;
+  time: string;
+  topic: string;
+  icon?: typeof Brain;
+};
+
 function TopicBlock({ title, topic, emptyText }: { title: string; topic: Topic | null; emptyText: string }) {
   return (
     <Card>
@@ -16,19 +24,113 @@ function TopicBlock({ title, topic, emptyText }: { title: string; topic: Topic |
   );
 }
 
+function useStudySession(data: TodayStudy) {
+  const doneStorageKey = `me_aprova_study_done_${data.date}`;
+  const sessionStorageKey = `me_aprova_study_started_${data.date}`;
+  const [sessionStarted, setSessionStarted] = useState(() => window.localStorage.getItem(sessionStorageKey) === "true");
+  const [done, setDone] = useState<string[]>(() => {
+    try {
+      const saved = window.localStorage.getItem(doneStorageKey);
+      return saved ? (JSON.parse(saved) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem(doneStorageKey, JSON.stringify(done));
+  }, [done, doneStorageKey]);
+
+  function startSession() {
+    window.localStorage.setItem(sessionStorageKey, "true");
+    setSessionStarted(true);
+  }
+
+  function toggleTask(id: string) {
+    setDone((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+  }
+
+  return { done, sessionStarted, startSession, toggleTask };
+}
+
+function StudyTrail({ tasks, done, onToggle }: { tasks: StudyTask[]; done: string[]; onToggle: (id: string) => void }) {
+  const progress = Math.round((done.length / tasks.length) * 100);
+
+  return (
+    <section>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-semibold">Trilha da sessão</h3>
+          <p className="mt-1 text-sm text-zinc-400">Marque cada tema quando terminar o estudo.</p>
+        </div>
+        <Badge>{progress}% concluído</Badge>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {tasks.map((task, index) => {
+          const checked = done.includes(task.id);
+          const Icon = task.icon;
+
+          return (
+            <label key={task.id} className="block cursor-pointer">
+              <Card className={`h-full transition hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
+                <div className="flex items-start gap-4">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(task.id)}
+                    className="mt-1 h-5 w-5 rounded border-white/20 bg-black/30 accent-teal-400"
+                    aria-label={`Concluir ${task.title}`}
+                  />
+                  <div className="flex min-w-0 flex-1 gap-3">
+                    {Icon ? (
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-white/5 text-accent">
+                        <Icon size={20} />
+                      </div>
+                    ) : null}
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge>Etapa {index + 1}</Badge>
+                        <Badge>{task.time}</Badge>
+                      </div>
+                      <h3 className={`mt-3 font-semibold ${checked ? "text-accent" : ""}`}>{task.title}</h3>
+                      <p className="mt-1 text-sm text-zinc-400">{task.topic}</p>
+                    </div>
+                  </div>
+                  {checked ? <CheckCircle2 className="shrink-0 text-accent" size={20} /> : null}
+                </div>
+              </Card>
+            </label>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function TrailPreview({ tasksCount }: { tasksCount: number }) {
+  return (
+    <Card>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="font-semibold">Trilha pronta para hoje</h3>
+          <p className="mt-1 text-sm text-zinc-400">Clique em começar sessão para abrir os temas e marcar seu avanço.</p>
+        </div>
+        <Badge>{tasksCount} etapas</Badge>
+      </div>
+    </Card>
+  );
+}
+
 function CyberStudyToday({ data }: { data: TodayStudy }) {
-  const [done, setDone] = useState<string[]>([]);
-  const tasks = [
+  const tasks: StudyTask[] = [
     { id: "theory", title: "Teoria guiada", time: "40 min", topic: data.main_topic?.name ?? "Fundamentos pendentes", icon: Brain },
     { id: "lab", title: "Laboratório prático", time: "60 min", topic: data.secondary_topic?.name ?? "Escolha um lab", icon: Code2 },
     { id: "project", title: "Projeto ou portfólio", time: "30 min", topic: "Documente evidências e comandos", icon: Play },
     { id: "notes", title: "Anotações e flashcards", time: "20 min", topic: "Revise conceitos vencidos", icon: CheckSquare },
   ];
+  const { done, sessionStarted, startSession, toggleTask } = useStudySession(data);
   const progress = Math.round((done.length / tasks.length) * 100);
-
-  function toggle(id: string) {
-    setDone((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
-  }
 
   return (
     <div className="space-y-6">
@@ -38,8 +140,8 @@ function CyberStudyToday({ data }: { data: TodayStudy }) {
           <h2 className="mt-4 text-4xl font-semibold">Plano diário para avançar na carreira.</h2>
           <p className="mt-3 max-w-2xl text-zinc-400">Uma sessão enxuta com teoria, laboratório, portfólio e revisão. O objetivo é constância e evidência prática.</p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button>
-              <Flame size={16} /> Começar sessão
+            <Button type="button" onClick={startSession} aria-expanded={sessionStarted}>
+              <Flame size={16} /> {sessionStarted ? "Sessão iniciada" : "Começar sessão"}
             </Button>
             <Badge>XP de hoje: +0</Badge>
             <Badge>Tempo: 2h30</Badge>
@@ -58,29 +160,7 @@ function CyberStudyToday({ data }: { data: TodayStudy }) {
         </Card>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        {tasks.map((task) => {
-          const checked = done.includes(task.id);
-          return (
-            <button key={task.id} type="button" onClick={() => toggle(task.id)} className="text-left">
-              <Card className={`h-full transition hover:border-accent/40 ${checked ? "border-accent/50 bg-accent/10" : ""}`}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex gap-3">
-                    <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-white/5 text-accent">
-                      <task.icon size={20} />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">{task.title}</h3>
-                      <p className="mt-1 text-sm text-zinc-400">{task.topic}</p>
-                    </div>
-                  </div>
-                  {checked ? <CheckCircle2 className="text-accent" size={20} /> : <Badge>{task.time}</Badge>}
-                </div>
-              </Card>
-            </button>
-          );
-        })}
-      </section>
+      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} /> : <TrailPreview tasksCount={tasks.length} />}
 
       <section className="grid gap-4 lg:grid-cols-2">
         <Card>
@@ -109,6 +189,52 @@ function CyberStudyToday({ data }: { data: TodayStudy }) {
   );
 }
 
+function GeneralStudyToday({ data }: { data: TodayStudy }) {
+  const tasks: StudyTask[] = [
+    { id: "main", title: "Bloco 1: teoria principal", topic: data.main_topic?.name ?? "Tema principal pendente", time: "60 min" },
+    { id: "secondary", title: "Bloco 2: revisão ou teoria secundária", topic: data.secondary_topic?.name ?? "Tema secundário pendente", time: "60 min" },
+    { id: "questions", title: "Bloco 3: questões e revisão de erros", topic: data.review_topic?.name ?? "Registrar desempenho ao terminar", time: "60 min" },
+  ];
+  const { done, sessionStarted, startSession, toggleTask } = useStudySession(data);
+  const progress = Math.round((done.length / tasks.length) * 100);
+
+  return (
+    <div className="space-y-6">
+      <section className="grid gap-4 lg:grid-cols-[1.2fr_.8fr]">
+        <Card>
+          <p className="text-sm uppercase tracking-[0.28em] text-accent">Estudo de hoje</p>
+          <h2 className="mt-2 text-3xl font-semibold">{data.is_sunday ? "Dia de simulado" : "3 blocos de 60 minutos"}</h2>
+          <p className="mt-2 text-zinc-400">{data.days_remaining} dias restantes - alvo de {data.questions_target} questões</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Button type="button" onClick={startSession} aria-expanded={sessionStarted}>
+              <Flame size={16} /> {sessionStarted ? "Sessão iniciada" : "Começar sessão"}
+            </Button>
+            <Badge>{done.length}/{tasks.length} etapas concluídas</Badge>
+          </div>
+        </Card>
+        <Card>
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-zinc-400">Progresso diário</span>
+            <Clock className="text-accent" size={18} />
+          </div>
+          <p className="mt-4 text-5xl font-semibold">{progress}%</p>
+          <div className="mt-4 h-3 rounded-full bg-white/10">
+            <div className="h-full rounded-full bg-accent" style={{ width: `${progress}%` }} />
+          </div>
+        </Card>
+      </section>
+
+      {sessionStarted ? <StudyTrail tasks={tasks} done={done} onToggle={toggleTask} /> : <TrailPreview tasksCount={tasks.length} />}
+
+      <section className="grid gap-4 lg:grid-cols-3">
+        <TopicBlock title="Bloco 1 - teoria principal" topic={data.main_topic} emptyText="Registre questões para refinar o plano." />
+        <TopicBlock title="Bloco 2 - revisão ou teoria secundária" topic={data.secondary_topic} emptyText="Registre questões para refinar o plano." />
+        <TopicBlock title="Revisão obrigatória" topic={data.review_topic} emptyText="Nenhuma revisão vencida hoje." />
+      </section>
+    </div>
+  );
+}
+
 export default function EstudoHoje() {
   const [data, setData] = useState<TodayStudy | null>(null);
   const module = currentModuleConfig();
@@ -119,20 +245,5 @@ export default function EstudoHoje() {
 
   if (!data) return <div className="text-zinc-400">Calculando recomendação...</div>;
   if (module.id === "cyber") return <CyberStudyToday data={data} />;
-
-  return (
-    <div className="space-y-6">
-      <section>
-        <p className="text-sm uppercase tracking-[0.28em] text-accent">Estudo de hoje</p>
-        <h2 className="mt-2 text-3xl font-semibold">{data.is_sunday ? "Dia de simulado" : "3 blocos de 60 minutos"}</h2>
-        <p className="mt-2 text-zinc-400">{data.days_remaining} dias restantes • alvo de {data.questions_target} questões</p>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-3">
-        <TopicBlock title="Bloco 1 • teoria principal" topic={data.main_topic} emptyText="Registre questões para refinar o plano." />
-        <TopicBlock title="Bloco 2 • revisão ou teoria secundária" topic={data.secondary_topic} emptyText="Registre questões para refinar o plano." />
-        <TopicBlock title="Revisão obrigatória" topic={data.review_topic} emptyText="Nenhuma revisão vencida hoje." />
-      </section>
-    </div>
-  );
+  return <GeneralStudyToday data={data} />;
 }
